@@ -1,1 +1,2 @@
 # fssh
+Fluent Secure Shell
