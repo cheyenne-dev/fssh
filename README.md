@@ -1,2 +1,2 @@
-# fssh
-Fluent Secure Shell
+# FSSH - Fluent Secure Shell
+FSSH is a CLI client for SSH
