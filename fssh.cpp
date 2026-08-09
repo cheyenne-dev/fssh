@@ -4,24 +4,24 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <boost/asio.hpp>
 #include <boost/process.hpp>
 #include <sstream>
-
-using namespace std;
+#include <limits>
 
 void logo();
 
-string getHomeDir() {
-	const string homeEnv = getenv("HOME");
+std::string getHomeDir() {
+	const std::string homeEnv = getenv("HOME");
 	return homeEnv;
 }
 
-const string HOME_PATH = getHomeDir();
-const string CONFIG_PATH = HOME_PATH + "/.config/fssh/config.yaml";
+const std::string HOME_PATH = getHomeDir();
+const std::string CONFIG_PATH = HOME_PATH + "/.config/fssh/config.yaml";
 
 //SETTING UP NEW CONNECTION
 
-string printError(string context) {
+std::string printError(std::string context) {
 	if (context == "connProfileFail") {
 		return "";
 	}
@@ -29,43 +29,43 @@ string printError(string context) {
 	return "[FSSH ERROR] Unexpected error. Sorry, I can't help you. You are on your own. ";
 }
 
-string newConn() {
+std::string newConn() {
 	system("clear");
 
-	string command = "touch " + CONFIG_PATH; //FIX THIS!!!!!!! COMMAND INJECTION!!!
+	std::string command = "touch " + CONFIG_PATH; //FIX THIS!!!!!!! COMMAND INJECTION!!!
 
 	system(command.c_str());
 
 	YAML::Node config = YAML::LoadFile(CONFIG_PATH);
 	
-	string newAddr;
-	string newName;
-	string newPort;
-	string newUser;
+	std::string newAddr;
+	std::string newName;
+	std::string newPort;
+	std::string newUser;
 
 	//Setting up
 	
 	logo();
 	
-	cout << "[FSSH EDIT] Adding new profile. Spaces are NOT allowed!\n"
+	std::cout << "[FSSH EDIT] Adding new profile. Spaces are NOT allowed!\n"
 	     << "[FSSH EDIT] Enter new name: ";
-	cin >> newName;
-	cout << "[FSSH EDIT] Enter new address: ";
-	cin >> newAddr;
-	cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cout << "[FSSH EDIT] Enter new port (default: 22): ";
-	getline(cin, newPort);
+	std::cin >> newName;
+	std::cout << "[FSSH EDIT] Enter new address: ";
+	std::cin >> newAddr;
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	std::cout << "[FSSH EDIT] Enter new port (default: 22): ";
+	std::getline(std::cin, newPort);
 	if (newPort.empty()) {
 		newPort = "22";
 	}
-	cout << "[FSSH EDIT] Enter new user: ";
-	cin >> newUser;
+	std::cout << "[FSSH EDIT] Enter new user: ";
+	std::cin >> newUser;
 
 	config[newName]["ipAddr"] = newAddr;
 	config[newName]["port"] = newPort;
 	config[newName]["username"] = newUser;
 
-	ofstream fout(CONFIG_PATH);
+	std::ofstream fout(CONFIG_PATH);
 	fout << config;
 	fout.close();
 
@@ -79,18 +79,18 @@ string newConn() {
 	return newName;
 }
 
-void editConn (string editName) {
+void editConn (std::string editName) {
 	YAML::Node config = YAML::LoadFile(CONFIG_PATH);
 	
-	string newAddr;
-	string newName;
-	string newPort;
-	string newUser;
+	std::string newAddr;
+	std::string newName;
+	std::string newPort;
+	std::string newUser;
 
 	//Setting up
-	cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cout << "Edit name (default: " << editName << "): ";
-	getline(cin, newName);
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	std::cout << "Edit name (default: " << editName << "): ";
+	std::getline(std::cin, newName);
 	if (newName.empty()) {
 		newName = editName;
 	}
@@ -103,20 +103,20 @@ void editConn (string editName) {
 		
 	}
 	//cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cout << "Edit address (default: " << config[editName]["ipAddr"].as<string>() << "): ";
-	getline(cin, newAddr);
+	std::cout << "Edit address (default: " << config[editName]["ipAddr"].as<std::string>() << "): ";
+	std::getline(std::cin, newAddr);
 	if (!newAddr.empty()) {
 		config[newName]["ipAddr"] = newAddr;
 	}
 	//cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cout << "Edit port (default: " << config[editName]["port"].as<string>() << "): ";
-	getline(cin, newPort);
+	std::cout << "Edit port (default: " << config[editName]["port"].as<std::string>() << "): ";
+	std::getline(std::cin, newPort);
 	if (!newPort.empty()) {
 		config[newName]["port"] = newPort;
 	}
 	//cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cout << "Edit username (default: " << config[editName]["username"].as<string>() << "): ";
-	getline(cin, newUser);
+	std::cout << "Edit username (default: " << config[editName]["username"].as<std::string>() << "): ";
+	std::getline(std::cin, newUser);
 	if (!newUser.empty()) {
         	config[newName]["username"] = newUser;	
 	}
@@ -125,89 +125,150 @@ void editConn (string editName) {
 		config.remove(editName);
 	}
 
-
-
-	//config[newName]["ipAddr"] = newAddr;
-	//config[newName]["port"] = newPort;
-	//config[newName]["username"] = newUser;
-
-	ofstream fout(CONFIG_PATH);
+	std::ofstream fout(CONFIG_PATH);
 	fout << config;
 	fout.close();
 }
 
-void delConn(string delName) {
+void delConn(std::string delName) {
 	YAML::Node config = YAML::LoadFile(CONFIG_PATH);
 
 	config.remove(delName);
 
-	ofstream fout(CONFIG_PATH);
+	std::ofstream fout(CONFIG_PATH);
 	fout << config;
 	fout.close();
 }
 
+std::vector<std::string> checkHosts(const std::vector<std::string>& ip, const std::vector<std::string>& ports) {
+	boost::filesystem::path ncPath = boost::process::environment::find_executable("nc");
+
+	std::vector<std::string> result;
+	result.resize(ip.size());
+
+	if (ncPath.empty()) {
+	//if (true) {	SKIPS TCP TEST 
+		std::cout << "[FSSH CONN] netcat not found. Please install it to see status of SSH port.\n" << std::endl;
+		for (size_t i = 0; i < ip.size(); i++) {
+			result[i] = "[N/A]";
+		}
+		return result;
+	}
+	else {
+		std::cout << "[FSSH CONN] Checking SSH ports status. Please wait...\n" << std::endl;
+	}
+
+	std::vector<boost::process::process> processes;
+	processes.reserve(ip.size());
+
+	boost::asio::io_context ctx;
+
+	for (size_t i = 0; i < ip.size(); i++) {
+		processes.push_back(boost::process::process(ctx, ncPath ,{"-zv", "-w", "1", ip[i], ports[i]}, boost::process::process_stdio{nullptr, nullptr, nullptr}));
+	}
+
+	for (size_t i = 0; i < ip.size(); i++) {
+		processes[i].wait();
+
+		if (processes[i].exit_code() == 0) {
+			result[i] = "[ONLINE]";
+		}
+		else {
+			result[i] = "[UNREACHABLE]";
+		}
+	}
+	return result;
+}
+
+
+
 //READING CONFIG.YAML
-vector<string> readConfig(bool fullReport = false) {
-	vector<string> names;
+std::vector<std::string> readConfig(std::string reportType) {
+	std::vector<std::string> report;
 	
 	try {
 			YAML::Node config = YAML::LoadFile(CONFIG_PATH);
 
 		if (config.IsMap()) {
-			if (fullReport == false) {
+			if (reportType == "ONLY_ROOT") {
 				for (auto const& rootElement : config) {
-					string deviceName = rootElement.first.as<string>();
-					names.push_back(deviceName);
+					std::string deviceName = rootElement.first.as<std::string>();
+					report.push_back(deviceName);
 				}
 			}
-			else {
+			else if (reportType == "FULL") {
 				for (auto const& rootElement : config) {
-					string reportString;
-					string deviceName = rootElement.first.as<string>();
+					std::string reportString;
+					std::string deviceName = rootElement.first.as<std::string>();
 
-					string ipAddr = config[deviceName]["ipAddr"].as<string>();
-					string port = config[deviceName]["port"].as<string>();
-					string username = config[deviceName]["username"].as<string>();
+					std::string ipAddr = config[deviceName]["ipAddr"].as<std::string>();
+					std::string port = config[deviceName]["port"].as<std::string>();
+					std::string username = config[deviceName]["username"].as<std::string>();
 					
 					reportString = deviceName + ": "
 						+ " IP=" + ipAddr
 						+ " SSH-PORT=" + port
 						+ " USERNAME=" + username;
 					
-					names.push_back(reportString);
+					report.push_back(reportString);
 				}
+			}
+			else if (reportType == "INTERACTIVE") {
+				std::vector<std::string> ip;
+				std::vector<std::string> ports;
+
+				for (auto const& rootElement : config) {
+					std::string deviceName = rootElement.first.as<std::string>();
+					
+					std::string ipAddr = config[deviceName]["ipAddr"].as<std::string>();
+					std::string port = config[deviceName]["port"].as<std::string>();
+
+					ip.push_back(config[deviceName]["ipAddr"].as<std::string>());
+					ports.push_back(config[deviceName]["port"].as<std::string>());
+
+					std::string reportString = deviceName + " - " + ipAddr + ":" + port + " | TCP: ";
+
+					report.push_back(reportString);
+				}
+
+				std::vector<std::string> tcpResult = checkHosts(ip, ports);
+
+				for (size_t i = 0; i < report.size(); i++) {
+					report[i] += tcpResult[i];
+				}
+
 			}
 		}
 	} catch (const YAML::Exception& e) {
-		cerr << "Error: " << e.what() << endl;
+		std::cerr << "Error: " << e.what() << std::endl;
 	}
 
-	return names;
+	return report;
 }
 
 //ESTABLISHING CONNECTION
-string establishConn(string deviceName) {
+std::string establishConn(std::string deviceName) {
 
-	string ipAddr;
-	string port;
-	string username;
+	std::string ipAddr;
+	std::string port;
+	std::string username;
 	
 	try {
 		YAML::Node config = YAML::LoadFile(CONFIG_PATH);
 
-		ipAddr = config[deviceName]["ipAddr"].as<string>();
-		port = config[deviceName]["port"].as<string>();
-		username = config[deviceName]["username"].as<string>();
+		ipAddr = config[deviceName]["ipAddr"].as<std::string>();
+		port = config[deviceName]["port"].as<std::string>();
+		username = config[deviceName]["username"].as<std::string>();
 
 	} catch (const YAML::Exception& e) {
-		cerr << "Error: " << e.what() << endl;
+		std::cerr << "Error: " << e.what() << std::endl;
 		return "\033[31m[FSSH CONN] ERROR: Can't read '" + deviceName + "' profile in '~/.config/fssh/config.yaml'.\033[0m\n";
 	}
 
-	stringstream mkDest;
+	std::stringstream mkDest;
 	mkDest << username << "@" << ipAddr;
 
-	string destination = mkDest.str();
+	std::string destination = mkDest.str();
 
 	boost::asio::io_context ctx;
 	boost::filesystem::path sshPath = boost::process::environment::find_executable("ssh");
@@ -226,16 +287,16 @@ string establishConn(string deviceName) {
 void makeKeyPair() {
 	int keygenResult = system("ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519");
 	if (keygenResult == 0) {
-		cout << "[FSSH KEYGEN] Key pair generated successfully!" << endl;
+		std::cout << "[FSSH KEYGEN] Key pair generated successfully!" << std::endl;
 	}
-	string keyLocation = HOME_PATH + "/.ssh/id_ed25519.pub";
+	std::string keyLocation = HOME_PATH + "/.ssh/id_ed25519.pub";
 
-	vector<string> names = readConfig();
+	std::vector<std::string> names = readConfig("FULL");
 	YAML::Node config = YAML::LoadFile(CONFIG_PATH);
 
 	for (auto& name : names) {
-		string destination = config[name]["username"].as<string>() + "@" + config[name]["ipAddr"].as<string>();
-		string port = config[name]["port"].as<string>();
+		std::string destination = config[name]["username"].as<std::string>() + "@" + config[name]["ipAddr"].as<std::string>();
+		std::string port = config[name]["port"].as<std::string>();
 
 		boost::asio::io_context ctx;
 		boost::filesystem::path ssh_copy_idPath = boost::process::environment::find_executable("ssh-copy-id");
@@ -248,9 +309,6 @@ void makeKeyPair() {
 					});
 		proc.wait();
 	}
-
-
-
 }
 
 enum class ConfigStatus {
@@ -262,7 +320,7 @@ enum class ConfigStatus {
 };
 
 //CHECKING CONFIG
-string LOGO_TYPE = "solid";
+std::string LOGO_TYPE = "solid";
 
 bool checkConfig() {
 
@@ -275,25 +333,21 @@ bool checkConfig() {
 		//LOGO_TYPE = 
 
 	} catch (const YAML::Exception& e) {
-		cerr << "Error: " << e.what() << endl;
-		string command = "mkdir -p " + HOME_PATH + "/.config/fssh; " + "touch " + CONFIG_PATH;
+		std::cerr << "Error: " << e.what() << std::endl;
+		std::string command = "mkdir -p " + HOME_PATH + "/.config/fssh; " + "touch " + CONFIG_PATH;
 		system(command.c_str());
 
-		cout << "Config is not valid. Creating new file..." << endl;
+		std::cout << "Config is not valid. Creating new file..." << std::endl;
 		newConn();
 	}
 
 	return true;
-
 }
 
 //   FRONT-END FUNCTIONS
 //MENU: ONLY LOGO
 void logoLINES() {
-	cout //<< "\033[0m                                     \n"
-	     //<< "\033[34m        \033[34m░▒▓\033[44m\033[37m  cheyenne-dev/fssh  \033[0m\033[34m▓▒░     \033[0m\n"
-	     //<< "\n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m   ______ _____ _____ _    _   \033[0m\033[34m▓▓▒▒░░ \n" 
+	std::cout << "\033[34m░░▒▒▓▓\033[44m\033[37m   ______ _____ _____ _    _   \033[0m\033[34m▓▓▒▒░░ \n" 
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  |  ____/ ____/ ____| |  | |  \033[0m\033[34m▓▓▒▒░░ \n" 
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  | |__ | (___| (___ | |__| |  \033[0m\033[34m▓▓▒▒░░ \n"
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  |  __| \\___ \\\\___ \\|  __  |  \033[0m\033[34m▓▓▒▒░░ \n"
@@ -307,10 +361,7 @@ void logoLINES() {
 }
 
 void logoSOLID() {
-	cout //<< "\033[0m                                     \n"
-	     //<< "\033[34m        \033[34m░▒▓\033[44m\033[37m  cheyenne-dev/fssh  \033[0m\033[34m▓▒░     \033[0m\n"
-	     //<< "\n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
+	std::cout << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██████ ██████ ██████ ██  ██  \033[0m\033[34m▓▓▒▒░░ \n" 
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██     ██     ██     ██  ██  \033[0m\033[34m▓▓▒▒░░ \n" 
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██████ ██████ ██████ ██████  \033[0m\033[34m▓▓▒▒░░ \n"
@@ -334,60 +385,60 @@ void logo() {
 }
 
 //MENU: CHOOSE CONNECTION PROFILE
-string chooseConn() {
+std::string chooseConn() {
 	checkConfig();
-	
-	vector<string> availableNames = readConfig();
 
-	for (auto& line : availableNames) {
-		cout << line << endl;
+	system("clear");
+	logo();
+	
+	std::vector<std::string> availableNames = readConfig("ONLY_ROOTS");
+	std::vector<std::string> output = readConfig("INTERACTIVE");
+
+	for (auto& line : output) {
+		std::cout << line << std::endl;
 	}
 
-	string deviceName;
+	std::string deviceName;
 
-	cout << "Enter device name: ";
-	cin >> deviceName;
+	std::cout << "\n[FSSH CONN] Enter profile name: ";
+	std::cin >> deviceName;
 
-	auto check = find(availableNames.begin(), availableNames.end(), deviceName);
+	auto check = std::find(availableNames.begin(), availableNames.end(), deviceName);
 
 	if (check != availableNames.end()) {
-		cout << "Name found " << deviceName << endl;
+		std::cout << "Connecting to " << deviceName << "..." << std::endl;
 	}
-	else {
-		cout << "FAIL: " << deviceName << endl;
-	}
-
 	return establishConn(deviceName);
 }
 
 //MENU: EDIT CONFIG
-void editConfig(string error = "") {
+void editConfig(std::string error = "") {
 	system("clear");
 	logo();
 	
-	vector<string> fullReport = readConfig(true);
-	vector<string> availableNames = readConfig();
+	std::vector<std::string> fullReport = readConfig("FULL");
+	std::vector<std::string> availableNames = readConfig("ONLY_ROOTS");
 	
-	cout << "Existing profiles:" << endl;
+	std::cout << "Existing profiles:" << std::endl;
 
 	int i = 1;
 	for (auto& line : fullReport) {
-		cout << i << " - "<< line << endl;
+		std::cout << i << " - "<< line << std::endl;
 		i++;
 	}
 	
-	cout << error <<"[FSSH EDIT] Which profile you want to edit: ";
-	string editName;
-	cin >> editName;
+	std::cout << error <<"[FSSH EDIT] Which profile you want to edit: ";
+	std::string editName;
+	std::cin >> editName;
 
 	if (editName == "exit") {
 		return;
 	}
 
-	auto check = find(availableNames.begin(), availableNames.end(), editName);
+	auto check = std::find(availableNames.begin(), availableNames.end(), editName);
 
 	if (check != availableNames.end()) {	
-		cout << "\n[FSSH EDIT] Modifying " << editName << ". Be careful! Changes are applied IMMEDIATELY!"<<endl;
+		std::cout << "\n[FSSH EDIT] Modifying " << editName << ". Be careful! Changes are applied IMMEDIATELY!"<<std::endl;
 		editConn(editName);
 	}
 	else {
@@ -399,35 +450,35 @@ void editConfig(string error = "") {
 }
 
 //MENU: DELETE PROFILE
-void deleteProfile(string error = "") {
+void deleteProfile(std::string error = "") {
 	system("clear");
 	logo();
 
-	vector<string> fullReport = readConfig(true);
-	vector<string> availableNames = readConfig();
+	std::vector<std::string> fullReport = readConfig("FULL");
+	std::vector<std::string> availableNames = readConfig("ONLY_ROOTS");
 	
-	cout << "Existing profiles:" << endl;
+	std::cout << "Existing profiles:" << std::endl;
 
 	int i = 1;
 	for (auto& line : fullReport) {
-		cout << i << " - "<< line << endl;
+		std::cout << i << " - "<< line << std::endl;
 		i++;
 	}
 	
-	cout << error <<"[FSSH EDIT] Which profile do you want to delete: ";
-	string delName;
-	cin >> delName;
+	std::cout << error <<"[FSSH EDIT] Which profile do you want to delete: ";
+	std::string delName;
+	std::cin >> delName;
 
 	if (delName == "exit") {
 		return;
 	}
 
-	auto check = find(availableNames.begin(), availableNames.end(), delName);
+	auto check = std::find(availableNames.begin(), availableNames.end(), delName);
 
 	if (check != availableNames.end()) {	
-		cout << "\n[FSSH EDIT] Waiting confirmation for " << delName << "\nTo confirm deletion, type the profile name again"<<endl;
-		string confirmation;
-		cin >> confirmation;
+		std::cout << "\n[FSSH EDIT] Waiting confirmation for " << delName << "\nTo confirm deletion, type the profile name again"<<std::endl;
+		std::string confirmation;
+		std::cin >> confirmation;
 		if (confirmation == delName) {
 			delConn(delName);
 		}
@@ -446,7 +497,7 @@ void deleteProfile(string error = "") {
 }
 
 //MAIN MENU
-void mainMenu(string message = "[FSSH MENU] Errors or notifications will appear here.") {	
+void mainMenu(std::string message = "[FSSH MENU] Errors or notifications will appear here.") {	
 	bool firstRun = true; 
 
 	while (true) {
@@ -454,10 +505,10 @@ void mainMenu(string message = "[FSSH MENU] Errors or notifications will appear 
         	logo();
 
         	if (!message.empty()) {
-        		cout << "\n" << message << "\n\n";
+        		std::cout << "" << message << "\n\n";
         	}
 
-        	cout << "Choose option:\n\n"
+        	std::cout << "Choose option:\n\n"
              	     << "┌ 1 - Establish connection;\n"
 		     << "│ 2 - Edit existing profile;\n"
             	     << "└ 3 - Add new profile;\n\n"
@@ -468,14 +519,14 @@ void mainMenu(string message = "[FSSH MENU] Errors or notifications will appear 
 		     << "  0 - Exit.\n\n" 
              	     << "Your choice (default: 1): ";
 
-        	string answer;
+        	std::string answer;
         
         	if (!firstRun) {
-            	cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         	}
         	firstRun = false;
 
-        	getline(cin, answer);
+        	std::getline(std::cin, answer);
 		
 		if (answer.empty() || answer == "1") {
            		message = chooseConn() + "[FSSH CONN] If you are sure that profile you entered exists, try editing it.";
@@ -496,7 +547,7 @@ void mainMenu(string message = "[FSSH MENU] Errors or notifications will appear 
             		message = "";
         	}
 		else if (answer == "9") {
-            		string command = "rm " + CONFIG_PATH;
+            		std::string command = "rm " + CONFIG_PATH;
             		system(command.c_str());
            		newConn();
             		message = "[FSSH CONFIG] Config rebuilt successfully.";
@@ -518,4 +569,3 @@ int main() {
 
 	return 0;
 }
-
