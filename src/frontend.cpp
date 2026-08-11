@@ -30,7 +30,7 @@ void logoLINES() {
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
 	     << "\n"
 	     << "\033[37m            Fluent Secure Shell            \n"
-	     << "\033[90m              v0.2a (cezanne)               \033[0m\n"
+	     << "\033[90m              v0.2.0-cezanne               \033[0m\n"
 	     << "                                     \n";
 }
 
@@ -44,7 +44,7 @@ void logoSOLID() {
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
 	     << "\n"
 	     << "\033[37m            Fluent Secure Shell            \n"
-	     << "\033[90m              v0.2a (cezanne)               \033[0m\n"
+	     << "\033[90m              v0.2.0-cezanne               \033[0m\n"
 	     << "                                     \n";
 }
 
