@@ -24,13 +24,15 @@ A simple terminal-based SSH profile manager written in C++.
 ```bash
 git clone https://github.com/cheyenne-dev/fssh.git
 cd fssh
-make```
+make
+```
 
 ## Usage
 
 ```bash
-./fssh```
+./fssh
+```
 
-##License
+## License
 
 This project is licensed under the MIT License. See the LICENSE file for details
