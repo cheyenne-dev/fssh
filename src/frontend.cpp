@@ -10,47 +10,7 @@
 
 #include "backend.hpp"
 #include "frontend.hpp"
-
-//CHECKING CONFIG
-std::string LOGO_TYPE = "solid";
-
-//MENU: ONLY LOGO
-void logoLINES() {
-	std::cout << "\033[34m░░▒▒▓▓\033[44m\033[37m   ______ _____ _____ _    _   \033[0m\033[34m▓▓▒▒░░ \n" 
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  |  ____/ ____/ ____| |  | |  \033[0m\033[34m▓▓▒▒░░ \n" 
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  | |__ | (___| (___ | |__| |  \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  |  __| \\___ \\\\___ \\|  __  |  \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  | |    ____) |___) | |  | |  \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  |_|   |_____/_____/|_|  |_|  \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\n"
-	     << "\033[37m            Fluent Secure Shell            \n"
-	     << "\033[90m              v0.2.1-cezanne               \033[0m\n"
-	     << "                                     \n";
-}
-
-void logoSOLID() {
-	std::cout << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██████ ██████ ██████ ██  ██  \033[0m\033[34m▓▓▒▒░░ \n" 
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██     ██     ██     ██  ██  \033[0m\033[34m▓▓▒▒░░ \n" 
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██████ ██████ ██████ ██████  \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██         ██     ██ ██  ██  \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m  ██     ██████ ██████ ██  ██  \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
-	     << "\n"
-	     << "\033[37m            Fluent Secure Shell            \n"
-	     << "\033[90m              v0.2.1-cezanne               \033[0m\n"
-	     << "                                     \n";
-}
-
-void logo() {
-	if (LOGO_TYPE == "solid") {
-		logoSOLID();
-	}
-	else {
-		logoLINES();
-	}
-}
+#include "launcher.hpp"
 
 //MENU: ESTABLISH CONNECTION
 std::string chooseProfile() {
@@ -285,8 +245,9 @@ void mainMenu(std::string message) {
             	     << "└ 3 - Add new profile;\n\n"
              	     << "┌ 4 - Generate key pair (for all profiles);\n"
 		     << "└ 5 - empty entry;\n\n"
-            	     << "┌ 8 - Delete existing profile;\n"
-        	     << "└ 9 - Rebuild config from scratch;\n\n"
+            	     << "┌ 7 - Delete existing profile;\n"
+        	     << "│ 8 - Rebuild config from scratch;\n"
+		     << "└ 9 - Change launcher preferences;\n\n"
 		     << "  0 - Exit.\n\n" 
              	     << "Your choice (default: 1): ";
 
@@ -312,13 +273,18 @@ void mainMenu(std::string message) {
             		makeKeyPair();
             		message = "";
         	}
-		else if (answer == "8") {
+		else if (answer == "7") {
             		message = deleteProfile();
+        	}
+		else if (answer == "8") {
+			std::filesystem::remove(CONFIG_PATH);
+           		message = newProfile();
         	}
 		else if (answer == "9") {
 			std::filesystem::remove(CONFIG_PATH);
            		message = newProfile();
         	}
+
 		else if (answer == "0" || answer == "exit") {
         	    	break; 
         	}

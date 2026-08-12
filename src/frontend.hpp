@@ -3,11 +3,6 @@
 
 #include <string>
 
-//LOGO RENDER
-void logoLINES();
-void logoSOLID();
-void logo();
-
 //OPERATIONS WITH PROFILES
 std::string chooseProfile();
 std::string editProfile();

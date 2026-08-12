@@ -5,6 +5,8 @@
 #include <vector>
 #include <boost/process.hpp>
 
+#include "constants.hpp"
+
 enum class error {
 	connProfileFail,
 	profileAddFail,
@@ -27,12 +29,10 @@ struct report {
 	std::string ip;
 	std::string port;
 	std::string user;
+
 };
 
-
 //GETTING ~/ DIRECTORY
-std::string getHomeDir();
-inline const std::string HOME_PATH = getHomeDir();
 inline const std::string CONFIG_PATH = HOME_PATH + "/.config/fssh/config.yaml";
 
 //ERROR HANDLER
