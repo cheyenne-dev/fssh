@@ -4,7 +4,7 @@
 #include <string>
 
 //LOGO RENDER
-void logoLines();
+void logoLINES();
 void logoSOLID();
 void logo();
 

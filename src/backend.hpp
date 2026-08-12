@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <boost/process.hpp>
 
 enum class error {
 	connProfileFail,
@@ -43,7 +44,7 @@ operationResult editConn (const std::string& editName, std::string newName, cons
 operationResult delConn(std::string delName);
 
 //TCP CHECKING
-std::vector<std::string> checkHosts(const std::vector<report>& profileList);
+std::vector<std::string> checkHosts(const std::vector<report>& profileList, boost::filesystem::path ncPath);
 
 //CONFIG READ
 std::vector<report> readConfig();

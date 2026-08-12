@@ -15,9 +15,6 @@ std::string getHomeDir() {
 
 //ERROR RESOLVER
 errorInfo getError(error errorCode, std::string prefix, std::string arg){
-	std::string errorMessage;
-	std::string errorHint = "";
-
 	switch (errorCode) {
 		case error::connProfileFail:
 			return {prefix + "Can't read '" + arg + "' profile in '~/.config/fssh/config.yaml'.",
@@ -112,22 +109,9 @@ operationResult delConn(std::string delName) {
 }
 
 //TCP CHECKING
-std::vector<std::string> checkHosts(const std::vector<report>& profileList) {
-	boost::filesystem::path ncPath = boost::process::environment::find_executable("nc");
-
+std::vector<std::string> checkHosts(const std::vector<report>& profileList, boost::filesystem::path ncPath) {
 	std::vector<std::string> result;
 	result.resize(profileList.size());
-
-	if (ncPath.empty()) {
-		std::cout << "[FSSH CONN] netcat not found. Please install it to see status of SSH port.\n" << std::endl;
-		for (size_t i = 0; i < profileList.size(); i++) {
-			result[i] = "[N/A]";
-		}
-		return result;
-	}
-	else {
-		std::cout << "[FSSH CONN] Checking SSH ports status. Please wait...\n" << std::endl;
-	}
 
 	std::vector<boost::process::process> processes;
 	processes.reserve(profileList.size());
@@ -154,7 +138,6 @@ std::vector<std::string> checkHosts(const std::vector<report>& profileList) {
 
 
 //READING CONFIG.YAML
-//NEW VERSION OF READ CONFIG
 std::vector<report> readConfig() {
 	std::vector<report> response;
 	
@@ -198,7 +181,7 @@ std::string establishConn(std::string deviceName) {
 
 	} catch (const YAML::Exception& e) {
 		std::cerr << "Error: " << e.what() << std::endl;
-		return "\033[31m[FSSH CONN] ERROR: Can't read '" + deviceName + "' profile in '~/.config/fssh/config.yaml'.\033[0m\n";
+		return "[FSSH CONN] ERROR: Can't read config";
 	}
 
 	std::string destination =  username + "@" + ipAddr;
@@ -240,22 +223,16 @@ void makeKeyPair() {
 }
 
 //CHECKING CONFIG
-std::string newProfile ();
-
 bool checkConfig() {
 	
 	try {
 		YAML::Node config = YAML::LoadFile(CONFIG_PATH);
-		//LOGO_TYPE = 
+		return true; 
 
 	} catch (const YAML::Exception& e) {
 		std::cerr << "Error: " << e.what() << std::endl;
 		std::filesystem::create_directories(HOME_PATH + "/.config/fssh");
 		std::ofstream(CONFIG_PATH, std::ios::app).close();
-
-		std::cout << "Config is not valid. Creating new file..." << std::endl;
-		newProfile();
+		return false;
 	}
-
-	return true;
 }

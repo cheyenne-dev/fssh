@@ -11,14 +11,9 @@
 #include "backend.hpp"
 #include "frontend.hpp"
 
-void logo();
-
 //CHECKING CONFIG
 std::string LOGO_TYPE = "solid";
 
-std::string newProfile ();
-
-//   FRONT-END FUNCTIONS
 //MENU: ONLY LOGO
 void logoLINES() {
 	std::cout << "\033[34m░░▒▒▓▓\033[44m\033[37m   ______ _____ _____ _    _   \033[0m\033[34m▓▓▒▒░░ \n" 
@@ -30,7 +25,7 @@ void logoLINES() {
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
 	     << "\n"
 	     << "\033[37m            Fluent Secure Shell            \n"
-	     << "\033[90m              v0.2.0-cezanne               \033[0m\n"
+	     << "\033[90m              v0.2.1-cezanne               \033[0m\n"
 	     << "                                     \n";
 }
 
@@ -44,7 +39,7 @@ void logoSOLID() {
 	     << "\033[34m░░▒▒▓▓\033[44m\033[37m                               \033[0m\033[34m▓▓▒▒░░ \n"
 	     << "\n"
 	     << "\033[37m            Fluent Secure Shell            \n"
-	     << "\033[90m              v0.2.0-cezanne               \033[0m\n"
+	     << "\033[90m              v0.2.1-cezanne               \033[0m\n"
 	     << "                                     \n";
 }
 
@@ -65,8 +60,21 @@ std::string chooseProfile() {
 	logo();
 	
 	std::vector<report> profileList = readConfig();
-	std::vector<std::string> tcpResult = checkHosts(profileList);
-	
+
+	boost::filesystem::path ncPath = boost::process::environment::find_executable("nc");
+	std::vector<std::string> tcpResult(profileList.size());
+
+	if (ncPath.empty()) {
+		std::cout << "[FSSH CONN] netcat not found. Please install it to see status of SSH port.\n" << std::endl;
+		for (size_t i = 0; i < profileList.size(); i++) {
+			tcpResult[i] = "[N/A]";
+		}
+	}
+	else {
+		std::cout << "[FSSH CONN] Checking SSH ports status. Please wait...\n" << std::endl;
+		tcpResult = checkHosts(profileList, ncPath);
+	}
+
 	int i = 0;
 	for (auto& line : profileList) {
 		std::cout << line.name << " - " << line.ip << ":" << line.port << " | TCP: " << tcpResult[i] << std::endl;
@@ -84,8 +92,11 @@ std::string chooseProfile() {
 
 	if (check != profileList.end()) {
 		std::cout << "Connecting to " << profileName << "..." << std::endl;
+		return establishConn(profileName);
 	}
-	return establishConn(profileName);
+	else {
+		return "\033[31m[FSSH CONN] ERROR: Can't read '" + profileName + "' profile in '~/.config/fssh/config.yaml'.\033[0m\n";
+	}
 }
 
 //MENU: EDIT EXISTING PROFILE
@@ -155,13 +166,10 @@ std::string editProfile() {
 			return "[FSSH EDIT] ERROR: New profile name already exists in config. Aborting.";
 		}
 	}
-	//cin.ignore(numeric_limits<streamsize>::max(), '\n');
 	std::cout << "Edit address (default: '" + oldInfo.ip + "'): ";
 	std::getline(std::cin, newAddr);
-	//cin.ignore(numeric_limits<streamsize>::max(), '\n');
 	std::cout << "Edit port (default: '" + oldInfo.port + "'): ";
 	std::getline(std::cin, newPort);
-	//cin.ignore(numeric_limits<streamsize>::max(), '\n');
 	std::cout << "Edit username (default: '" + oldInfo.user + "'): ";
 	std::getline(std::cin, newUser);
 	
@@ -198,7 +206,7 @@ std::string newProfile () {
 	operationResult result = newConn(newName, newAddr, newPort, newUser);
 
 	if (result.success) {
-		return "[FSSH EDIT] Added new profile " + newName;
+		return "[FSSH EDIT] Added new profile '" + newName + "'.";
 	}
 	else {
 		return result.error.message + "\n" + result.error.hint;
@@ -285,7 +293,7 @@ void mainMenu(std::string message) {
         	std::string answer;
         
         	if (!firstRun) {
-            	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         	}
         	firstRun = false;
 
