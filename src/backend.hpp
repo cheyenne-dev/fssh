@@ -11,7 +11,9 @@ enum class error {
 	connProfileFail,
 	profileAddFail,
 	profileEditFail,
-	profileDelFail
+	profileDelFail,
+	
+	launcherConfigFail
 };
 
 struct errorInfo {

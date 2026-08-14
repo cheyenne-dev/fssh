@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/process.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string.hpp>
 #include <limits>
 #include <filesystem>
 
@@ -227,6 +229,150 @@ std::string deleteProfile() {
 	}
 }
 
+const std::vector<std::string> colors = {"red", "green", "yellow", "blue", "magenta", "cyan", "white"};
+
+//LAUNCHER PREFERENCES EDITOR
+std::string editMenu_mainPage(std::string message) { //WORK IN PROGRESS
+	while (true) {
+		system("clear");
+        	logo();
+
+        	if (!message.empty()) {
+        		std::cout << "" << message << "\n\n";
+        	}
+
+        	std::cout << "Choose option:\n\n"
+             	     	  << "┌ 1 - Change logo colors\n"
+			  << "└ 2 - Change logo style\n\n"
+		     	  << "  0 - Exit.\n\n" 
+             	     	  << "Your choice: ";
+		
+		std::string answer;
+		std::cin >> answer;
+		
+		//LOGO EDIT
+		if (answer == "1") {
+			message = editMenu_logoColor();
+		}
+		else if (answer == "2") {
+			message = editMenu_logoStyle();
+		}
+		else if (answer == "0") {
+			return "[FSSH MENU] Interrupted by user.";
+		}
+	}
+}
+std::string editMenu_logoColor(std::string message) {
+	while (true) {
+		system("clear");
+        	logo();
+
+		if (!message.empty()) {
+        		std::cout << "" << message << "\n\n";
+        	}
+
+		std::cout << "Choose what to change:\n\n"
+             	  	<< "┌ 1 - Background color\n"
+		  	<< "└ 2 - Letters color\n\n"
+		  	<< "  0 - Exit.\n\n" 
+             	  	<< "Your choice: ";
+
+			std::string answer;
+			std::cin >> answer;
+
+			if (answer == "1" || answer == "2") {
+				while (true) {
+					system("clear");
+        				logo();
+
+					if (!message.empty()) {
+        					std::cout << "" << message << "\n\n";
+        				}
+					std::cout << "[FSSH MENU] Which color do you prefer?\n\n"
+						<< "Available colors:\n"
+						<< "\033[0m - \033[31mRed\n"
+						<< "\033[0m - \033[32mGreen\n"
+						<< "\033[0m - \033[33mYellow\n"
+						<< "\033[0m - \033[34mBlue\n"
+						<< "\033[0m - \033[35mMagenta\n"
+						<< "\033[0m - \033[36mCyan\n"
+						<< "\033[0m - \033[37mWhite\n\n"
+						<< " 0 Exit\n\n"
+						<< "\033[0mYour choice : ";
+						
+						std::string answerOld = answer;
+						std::string answer;
+						std::cin >> answer;
+
+						if (answer == "0" || answer == "exit") {
+							return "[FSSH MENU] Interrupted by user.";
+						}
+
+
+						auto check = std::find_if(colors.begin(), colors.end(), [&answer](const std::string color){
+							return boost::iequals(color, answer);
+						});
+
+						if (check != colors.end()) {
+							if (answerOld == "1") {
+								editArgs args; args.color = boost::algorithm::to_lower_copy(answer);
+								message = editLauncherConfig(editType::logoBgColor, args);
+								break;
+							}
+							else {
+								editArgs args; args.color = boost::algorithm::to_lower_copy(answer);
+								message = editLauncherConfig(editType::logoFontColor, args);
+								break;
+							}
+						}
+						else {
+							message = "[FSSH EDIT] ERROR: Color you entered doesn't exist.";
+						}
+				}
+			}	
+			else if (answer == "0") {
+				return "[FSSH MENU] Interrupted by user.";
+			}		
+		}
+}
+std::string editMenu_logoStyle(std::string message) {
+	while (true) {
+		system("clear");
+        	logo();
+
+		std::vector<std::string> styles = {"solid", "lines"};
+
+		if (!message.empty()) {
+        		std::cout << "" << message << "\n\n";
+        	}
+		std::cout << "[FSSH MENU] Which style do you prefer?\n\n"
+			<< "Available styles:\n"
+			<< " - Solid\n"
+			<< " - Lines\n\n"
+			<< " 0 Exit\n\n"
+			<< "Your choice : ";
+
+		std::string answer;
+		std::cin >> answer;
+
+		if (answer == "0" || answer == "exit") {
+			return "[FSSH MENU] Interrupted by user.";
+		}
+
+		auto check = std::find_if(styles.begin(), styles.end(), [&answer](const std::string color){
+			return boost::iequals(color, answer);
+		});
+
+		if (check != styles.end()) {
+			editArgs args; args.style = boost::algorithm::to_lower_copy(answer);
+			return editLauncherConfig(editType::logoStyle, args);
+		}
+		else {
+			return "[FSSH EDIT] ERROR: Style you entered doesn't exist.";
+		}
+	}
+}
+
 //MAIN MENU
 void mainMenu(std::string message) {	
 	bool firstRun = true; 
@@ -246,8 +392,8 @@ void mainMenu(std::string message) {
              	     << "┌ 4 - Generate key pair (for all profiles);\n"
 		     << "└ 5 - empty entry;\n\n"
             	     << "┌ 7 - Delete existing profile;\n"
-        	     << "│ 8 - Rebuild config from scratch;\n"
-		     << "└ 9 - Change launcher preferences;\n\n"
+        	     << "└ 8 - Rebuild config from scratch;\n\n"
+		     << "  9 - Change launcher preferences;\n\n"
 		     << "  0 - Exit.\n\n" 
              	     << "Your choice (default: 1): ";
 
@@ -281,9 +427,8 @@ void mainMenu(std::string message) {
            		message = newProfile();
         	}
 		else if (answer == "9") {
-			std::filesystem::remove(CONFIG_PATH);
-           		message = newProfile();
-        	}
+			message = editMenu_mainPage();
+		}
 
 		else if (answer == "0" || answer == "exit") {
         	    	break; 

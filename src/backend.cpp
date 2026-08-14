@@ -28,6 +28,9 @@ errorInfo getError(error errorCode, std::string prefix, std::string arg){
 		case error::profileDelFail:
 			return {prefix + "Can't delete profile '" + arg + "' in '~/.config/fssh/config.yaml'.",
 			""};
+		case error::launcherConfigFail:
+			return {prefix + "Can't read launcher config in '~/.config/fssh/launcher.yaml'.",
+				prefix + "Loaded using defaults."};
 		default:
 			return {prefix + "Unexpected error. Sorry, I can't help you. You are on your own.",
 			""};
@@ -223,8 +226,7 @@ void makeKeyPair() {
 }
 
 //CHECKING CONFIG
-bool checkConfig() {
-	
+bool checkConfig() {	
 	try {
 		YAML::Node config = YAML::LoadFile(CONFIG_PATH);
 		return true; 
