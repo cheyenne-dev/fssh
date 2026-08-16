@@ -89,7 +89,7 @@ std::string editProfile() {
 		std::cin >> editName;
 
 		if (editName == "exit") {
-			return "[FSSH EDIT] Interrupted by user.";
+			return "\033[33m[FSSH EDIT] Interrupted by user.";
 		}
 
 		auto check = std::find_if(profileList.begin(), profileList.end(), [editName](const report& r) {
@@ -101,7 +101,7 @@ std::string editProfile() {
 			break;
 		}	
 		else {
-			error = "[FSSH EDIT] ERROR: invalid name '" + editName + "'\n";
+			error = "\033[31m[FSSH EDIT] ERROR: invalid name '" + editName + "'\n";
 		}
 	}
 
@@ -131,7 +131,7 @@ std::string editProfile() {
 			return r.name == newName;
 		});
 		if (check != profileList.end()){
-			return "[FSSH EDIT] ERROR: New profile name already exists in config. Aborting.";
+			return "\033[31m[FSSH EDIT] ERROR: New profile name already exists in config. Aborting.";
 		}
 	}
 	std::cout << "Edit address (default: '" + oldInfo.ip + "'): ";
@@ -143,7 +143,7 @@ std::string editProfile() {
 	
 	operationResult result = editConn(editName, newName, newAddr, newPort, newUser);
 	if (result.success) {
-		return "[FSSH EDIT] '" + editName + "' profile changed successfully.";
+		return "\033[32m[FSSH EDIT] '" + editName + "' profile changed successfully.";
 	}
 	else {
 		return result.error.message + "\n" + result.error.hint;
@@ -174,7 +174,7 @@ std::string newProfile () {
 	operationResult result = newConn(newName, newAddr, newPort, newUser);
 
 	if (result.success) {
-		return "[FSSH EDIT] Added new profile '" + newName + "'.";
+		return "\033[32m[FSSH EDIT] Added new profile '" + newName + "'.";
 	}
 	else {
 		return result.error.message + "\n" + result.error.hint;
@@ -205,7 +205,7 @@ std::string deleteProfile() {
 		std::cin >> delName;
 
 		if (delName == "exit") {
-			return "[FSSH EDIT] Interrupted by user.";
+			return "\033[33m[FSSH EDIT] Interrupted by user.";
 		}
 
 			auto check = std::find_if(profileList.begin(), profileList.end(), [delName](const report& r) {
@@ -219,18 +219,18 @@ std::string deleteProfile() {
 			if (confirmation == delName) {
 				operationResult result = delConn(delName);
 				if (result.success) {
-					return "[FSSH EDIT] Profile '" + delName + "' deleted successfully.";
+					return "\033[32m[FSSH EDIT] Profile '" + delName + "' deleted successfully.";
 				}
 				else {
 					return result.error.message + "\n" + result.error.hint;
 				}
 			}
 			else {
-				return "[FSSH EDIT] ERROR: Names are not the same. Aborted.";	
+				return "\033[31m[FSSH EDIT] ERROR: Names are not the same. Aborted.";	
 			}
 		}
 		else {
-			error = "[FSSH EDIT] ERROR: invalid name '" + delName + "'\n";
+			error = "\033[31m[FSSH EDIT] ERROR: invalid name '" + delName + "'\n";
 		}
 	}
 }
@@ -266,7 +266,7 @@ std::string editMenu_mainPage(std::string message) { //WORK IN PROGRESS
         	logo();
 
         	if (!message.empty()) {
-        		std::cout << "" << message << "\n\n";
+        		std::cout << "" << message << "\033[0m\n\n";
         	}
 
         	std::cout << "Choose option:\n\n"
@@ -290,10 +290,10 @@ std::string editMenu_mainPage(std::string message) { //WORK IN PROGRESS
 			message = editMenu_profileColor();
 		}
 		else if (answer == "0" || answer == "exit") {
-			return "[FSSH MENU] Interrupted by user.";
+			return "\033[33m[FSSH MENU] Interrupted by user.";
 		}
 		else {
-			message = "[FSSH MENU] ERROR: Incorrect option '" + answer + "'.";
+			message = "\033[31m[FSSH MENU] ERROR: Incorrect option '" + answer + "'.";
 		}
 	}
 }
@@ -303,7 +303,7 @@ std::string editMenu_logoColor(std::string message) {
         	logo();
 
 		if (!message.empty()) {
-        		std::cout << "" << message << "\n\n";
+        		std::cout << "" << message << "\033[0m\n\n";
         	}
 
 		std::cout << "Choose what to change:\n\n"
@@ -321,7 +321,7 @@ std::string editMenu_logoColor(std::string message) {
         				logo();
 
 					if (!message.empty()) {
-        					std::cout << "" << message << "\n\n";
+        					std::cout << "" << message << "\033[0m\n\n";
         				}
 					
 					colorList();
@@ -331,7 +331,7 @@ std::string editMenu_logoColor(std::string message) {
 					std::cin >> answer;
 
 					if (answer == "0" || answer == "exit") {
-						return "[FSSH MENU] Interrupted by user.";
+						return "\033[33m[FSSH MENU] Interrupted by user.";
 					}
 
 
@@ -352,15 +352,15 @@ std::string editMenu_logoColor(std::string message) {
 						}
 					}
 					else {
-						message = "[FSSH MENU] ERROR: Color '" + answer + "' doesn't exist.";
+						message = "\033[31m[FSSH MENU] ERROR: Color '" + answer + "' doesn't exist.";
 					}
 				}
 			}	
 			else if (answer == "0" || answer == "exit") {
-				return "[FSSH MENU] Interrupted by user.";
+				return "\033[33m[FSSH MENU] Interrupted by user.";
 			}
 			else {
-				message = "[FSSH MENU] ERROR: Incorrect option '" + answer + "'.";
+				message = "\033[31m[FSSH MENU] ERROR: Incorrect option '" + answer + "'.";
 			}
 		}
 }
@@ -372,7 +372,7 @@ std::string editMenu_logoStyle(std::string message) {
 		std::vector<std::string> styles = {"solid", "lines"};
 
 		if (!message.empty()) {
-        		std::cout << "" << message << "\n\n";
+        		std::cout << "" << message << "\033[0m\n\n";
         	}
 		std::cout << "Which style do you prefer?\n\n"
 			<< "Available styles:\n"
@@ -385,7 +385,7 @@ std::string editMenu_logoStyle(std::string message) {
 		std::cin >> answer;
 
 		if (answer == "0" || answer == "exit") {
-			return "[FSSH MENU] Interrupted by user.";
+			return "\033[33m[FSSH MENU] Interrupted by user.";
 		}
 
 		auto check = std::find_if(styles.begin(), styles.end(), [&answer](const std::string color){
@@ -397,7 +397,7 @@ std::string editMenu_logoStyle(std::string message) {
 			return editLauncherConfig(editType::logoStyle, args);
 		}
 		else {
-			return "[FSSH EDIT] ERROR: Style you entered doesn't exist.";
+			return "\033[31m[FSSH EDIT] ERROR: Style you entered doesn't exist.";
 		}
 	}
 }
@@ -409,7 +409,7 @@ std::string editMenu_profileColor (std::string message) {
 		std::vector<report> profileList = readConfig();
 
 		if (!message.empty()) {
-        		std::cout << "" << message << "\n\n";
+        		std::cout << "" << message << "\033[0m\n\n";
         	}
 		std::cout << "Which profile color you want to modify?\n\n";\
 
@@ -424,7 +424,7 @@ std::string editMenu_profileColor (std::string message) {
 		std::cin >> answer;
 
 		if (answer == "0" || answer == "exit") {
-			return "[FSSH MENU] Interrupted by user.";
+			return "\033[33m[FSSH MENU] Interrupted by user.";
 		}
 
 		auto check = std::find_if(profileList.begin(), profileList.end(), [answer](const report& r) {
@@ -447,7 +447,7 @@ std::string editMenu_profileColor (std::string message) {
 				std::cin >> answer;
 
 				if (answer == "0" || answer == "exit") {
-					return "[FSSH MENU] Interrupted by user.";
+					return "\033[33m[FSSH MENU] Interrupted by user.";
 				}
 
 
@@ -464,7 +464,7 @@ std::string editMenu_profileColor (std::string message) {
 					break;
 				}
 				else {
-					message = "[FSSH MENU] ERROR: Color '" + answer + "' doesn't exist.";
+					message = "\033[31m[FSSH MENU] ERROR: Color '" + answer + "' doesn't exist.";
 				}
 			}
 		}
@@ -532,7 +532,7 @@ void mainMenu(std::string message) {
         	    	break; 
         	}
 		else {
-			message = "[FSSH MENU] Invalid option '" + answer + "'. Use one of the following.";
+			message = "\033[31m[FSSH MENU] Invalid option '" + answer + "'. Use one of the following.";
 		}
     	}
 }
