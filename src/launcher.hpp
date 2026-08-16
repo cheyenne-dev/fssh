@@ -3,15 +3,16 @@
 
 #include <string>
 
-#include "constants.hpp"
+//#include "constants.hpp"
 #include "backend.hpp"
 
-inline const std::string LAUNCHER_CONFIG_PATH = HOME_PATH + "/.config/fssh/launcher.yaml";
+//inline const std::string LAUNCHER_CONFIG_PATH = HOME_PATH + "/.config/fssh/launcher.yaml";
 
 enum class editType {
 	logoBgColor,
 	logoFontColor,
-	logoStyle
+	logoStyle,
+	profileColor
 };
 
 struct globalColors {
@@ -21,6 +22,7 @@ struct globalColors {
 };
 
 struct editArgs {
+	std::string name;
 	std::string color;
 	std::string type;
 	std::string style;

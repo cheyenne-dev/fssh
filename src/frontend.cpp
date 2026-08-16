@@ -27,7 +27,7 @@ std::string chooseProfile() {
 	std::vector<std::string> tcpResult(profileList.size());
 
 	if (ncPath.empty()) {
-		std::cout << "[FSSH CONN] netcat not found. Please install it to see status of SSH port.\n" << std::endl;
+		std::cout << "\033[33m[FSSH CONN] netcat not found. Please install it to see status of SSH port.\n" << std::endl;
 		for (size_t i = 0; i < profileList.size(); i++) {
 			tcpResult[i] = "[N/A]";
 		}
@@ -39,7 +39,7 @@ std::string chooseProfile() {
 
 	int i = 0;
 	for (auto& line : profileList) {
-		std::cout << line.name << " - " << line.ip << ":" << line.port << " | TCP: " << tcpResult[i] << std::endl;
+		std::cout << "\033[38;5;" << getColor(line.color) << "m" << line.name << " \033[90m- \033[97m" << line.ip << "\033[90m:\033[96m" << line.port << " \033[90m| \033[96mTCP\033[90m: " << tcpResult[i] << "\033[0m" << std::endl;
 		i++;
 	}
 
@@ -47,6 +47,10 @@ std::string chooseProfile() {
 
 	std::cout << "\n[FSSH CONN] Enter profile name: ";
 	std::cin >> profileName;
+
+	if (profileName == "exit") {
+		return "\033[33m[FSSH CONN] Interrupted by user.";
+	}
 
 	auto check = std::find_if(profileList.begin(), profileList.end(), [profileName](const report& r) {
 		return r.name == profileName;
@@ -56,8 +60,10 @@ std::string chooseProfile() {
 		std::cout << "Connecting to " << profileName << "..." << std::endl;
 		return establishConn(profileName);
 	}
-	else {
-		return "\033[31m[FSSH CONN] ERROR: Can't read '" + profileName + "' profile in '~/.config/fssh/config.yaml'.\033[0m\n";
+	else { 
+		//return "\033[31m[FSSH CONN] ERROR: Can't read '" + profileName + "' profile in '~/.config/fssh/config.yaml'.\033[0m\n";
+		errorInfo error = getError(error::connProfileFail, "[FSSH CONN] ", profileName);
+		return error.message + "\n" + error.hint;
 	}
 }
 
@@ -229,7 +235,29 @@ std::string deleteProfile() {
 	}
 }
 
-const std::vector<std::string> colors = {"red", "green", "yellow", "blue", "magenta", "cyan", "white"};
+const std::vector<std::string> colors = {"red", "green", "yellow", "blue", "magenta", "cyan", "white", "br-red", "br-green", "br-yellow", "br-blue", "br-magenta", "br-cyan", "br-white"};
+
+void colorList() {
+	std::cout << "Which color do you prefer?\n\n"
+		<< "Available colors:\n"
+		<< "\033[0m - \033[38;5;1mred\n"
+		<< "\033[0m - \033[38;5;9mbr-red\n"
+		<< "\033[0m - \033[38;5;2mgreen\n"
+		<< "\033[0m - \033[38;5;10mbr-green\n"
+		<< "\033[0m - \033[38;5;3myellow\n"
+		<< "\033[0m - \033[38;5;11mbr-yellow\n"
+		<< "\033[0m - \033[38;5;4mblue\n"
+		<< "\033[0m - \033[38;5;12mbr-blue\n"
+		<< "\033[0m - \033[38;5;5mmagenta\n"
+		<< "\033[0m - \033[38;5;13mbr-magenta\n"
+		<< "\033[0m - \033[38;5;6mcyan\n"
+		<< "\033[0m - \033[38;5;14mbr-cyan\n"
+		<< "\033[0m - \033[38;5;7mwhite\n"
+		<< "\033[0m - \033[38;5;15mbr-white\n"
+		<< "\033[0m - \033[38;5;8mwhite\n\n"
+		<< "\033[0m 0 Exit\n\n"
+		<< "\033[0mYour choice : ";
+}
 
 //LAUNCHER PREFERENCES EDITOR
 std::string editMenu_mainPage(std::string message) { //WORK IN PROGRESS
@@ -244,6 +272,7 @@ std::string editMenu_mainPage(std::string message) { //WORK IN PROGRESS
         	std::cout << "Choose option:\n\n"
              	     	  << "┌ 1 - Change logo colors\n"
 			  << "└ 2 - Change logo style\n\n"
+			  << "  3 - Change profile color in list\n\n"
 		     	  << "  0 - Exit.\n\n" 
              	     	  << "Your choice: ";
 		
@@ -257,8 +286,14 @@ std::string editMenu_mainPage(std::string message) { //WORK IN PROGRESS
 		else if (answer == "2") {
 			message = editMenu_logoStyle();
 		}
-		else if (answer == "0") {
+		else if (answer == "3") {
+			message = editMenu_profileColor();
+		}
+		else if (answer == "0" || answer == "exit") {
 			return "[FSSH MENU] Interrupted by user.";
+		}
+		else {
+			message = "[FSSH MENU] ERROR: Incorrect option '" + answer + "'.";
 		}
 	}
 }
@@ -288,51 +323,45 @@ std::string editMenu_logoColor(std::string message) {
 					if (!message.empty()) {
         					std::cout << "" << message << "\n\n";
         				}
-					std::cout << "[FSSH MENU] Which color do you prefer?\n\n"
-						<< "Available colors:\n"
-						<< "\033[0m - \033[31mRed\n"
-						<< "\033[0m - \033[32mGreen\n"
-						<< "\033[0m - \033[33mYellow\n"
-						<< "\033[0m - \033[34mBlue\n"
-						<< "\033[0m - \033[35mMagenta\n"
-						<< "\033[0m - \033[36mCyan\n"
-						<< "\033[0m - \033[37mWhite\n\n"
-						<< " 0 Exit\n\n"
-						<< "\033[0mYour choice : ";
+					
+					colorList();
 						
-						std::string answerOld = answer;
-						std::string answer;
-						std::cin >> answer;
+					std::string answerOld = answer;
+					std::string answer;
+					std::cin >> answer;
 
-						if (answer == "0" || answer == "exit") {
-							return "[FSSH MENU] Interrupted by user.";
-						}
+					if (answer == "0" || answer == "exit") {
+						return "[FSSH MENU] Interrupted by user.";
+					}
 
 
-						auto check = std::find_if(colors.begin(), colors.end(), [&answer](const std::string color){
-							return boost::iequals(color, answer);
-						});
+					auto check = std::find_if(colors.begin(), colors.end(), [&answer](const std::string color){
+						return boost::iequals(color, answer);
+					});
 
-						if (check != colors.end()) {
-							if (answerOld == "1") {
-								editArgs args; args.color = boost::algorithm::to_lower_copy(answer);
-								message = editLauncherConfig(editType::logoBgColor, args);
-								break;
-							}
-							else {
-								editArgs args; args.color = boost::algorithm::to_lower_copy(answer);
-								message = editLauncherConfig(editType::logoFontColor, args);
-								break;
-							}
+					if (check != colors.end()) {
+						if (answerOld == "1") {
+							editArgs args; args.color = boost::algorithm::to_lower_copy(answer);
+							message = editLauncherConfig(editType::logoBgColor, args);
+							break;
 						}
 						else {
-							message = "[FSSH EDIT] ERROR: Color you entered doesn't exist.";
+							editArgs args; args.color = boost::algorithm::to_lower_copy(answer);
+							message = editLauncherConfig(editType::logoFontColor, args);
+							break;
 						}
+					}
+					else {
+						message = "[FSSH MENU] ERROR: Color '" + answer + "' doesn't exist.";
+					}
 				}
 			}	
-			else if (answer == "0") {
+			else if (answer == "0" || answer == "exit") {
 				return "[FSSH MENU] Interrupted by user.";
-			}		
+			}
+			else {
+				message = "[FSSH MENU] ERROR: Incorrect option '" + answer + "'.";
+			}
 		}
 }
 std::string editMenu_logoStyle(std::string message) {
@@ -345,7 +374,7 @@ std::string editMenu_logoStyle(std::string message) {
 		if (!message.empty()) {
         		std::cout << "" << message << "\n\n";
         	}
-		std::cout << "[FSSH MENU] Which style do you prefer?\n\n"
+		std::cout << "Which style do you prefer?\n\n"
 			<< "Available styles:\n"
 			<< " - Solid\n"
 			<< " - Lines\n\n"
@@ -372,6 +401,75 @@ std::string editMenu_logoStyle(std::string message) {
 		}
 	}
 }
+std::string editMenu_profileColor (std::string message) {
+	while (true) {
+		system("clear");
+        	logo();
+
+		std::vector<report> profileList = readConfig();
+
+		if (!message.empty()) {
+        		std::cout << "" << message << "\n\n";
+        	}
+		std::cout << "Which profile color you want to modify?\n\n";\
+
+		for (auto& line : profileList) {
+			std::cout << "\033[0m - \033[38;5;" << getColor(line.color) << "m" << line.name << "\n";	
+		}
+
+		std::cout << "\n 0 Exit\n\n"
+			<< "Your choise: ";
+
+		std::string answer;
+		std::cin >> answer;
+
+		if (answer == "0" || answer == "exit") {
+			return "[FSSH MENU] Interrupted by user.";
+		}
+
+		auto check = std::find_if(profileList.begin(), profileList.end(), [answer](const report& r) {
+			return r.name == answer;
+		});
+
+		if (check != profileList.end()) {
+			while (true) {
+				system("clear");
+        			logo();
+
+				if (!message.empty()) {
+        				std::cout << "" << message << "\n\n";
+        			}
+
+				colorList();
+
+				std::string answerOld = answer;
+				std::string answer;
+				std::cin >> answer;
+
+				if (answer == "0" || answer == "exit") {
+					return "[FSSH MENU] Interrupted by user.";
+				}
+
+
+				auto check = std::find_if(colors.begin(), colors.end(), [&answer](const std::string color){
+					return boost::iequals(color, answer);
+				});
+
+				if (check != colors.end()) {
+					editArgs args; 
+					args.color = boost::algorithm::to_lower_copy(answer);
+					args.name = boost::algorithm::to_lower_copy(answerOld);
+
+					message = editLauncherConfig(editType::profileColor, args);
+					break;
+				}
+				else {
+					message = "[FSSH MENU] ERROR: Color '" + answer + "' doesn't exist.";
+				}
+			}
+		}
+	}
+}
 
 //MAIN MENU
 void mainMenu(std::string message) {	
@@ -382,7 +480,7 @@ void mainMenu(std::string message) {
         	logo();
 
         	if (!message.empty()) {
-        		std::cout << "" << message << "\n\n";
+        		std::cout << "" << message << "\033[0m\n\n";
         	}
 
         	std::cout << "Choose option:\n\n"

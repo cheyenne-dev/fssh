@@ -1,4 +1,5 @@
 #include <yaml-cpp/yaml.h>
+#include <libssh/libssh.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -6,6 +7,7 @@
 #include <boost/asio.hpp>
 #include <boost/process.hpp>
 #include <filesystem>
+
 #include "backend.hpp"
 
 std::string getHomeDir() {
@@ -17,22 +19,22 @@ std::string getHomeDir() {
 errorInfo getError(error errorCode, std::string prefix, std::string arg){
 	switch (errorCode) {
 		case error::connProfileFail:
-			return {prefix + "Can't read '" + arg + "' profile in '~/.config/fssh/config.yaml'.",
+			return {"\033[31m" + prefix + "Can't read '" + arg + "' profile in '~/.config/fssh/config.yaml'.",
 				prefix + "If you are sure that profile you entered exists, try editing it."};
 		case error::profileAddFail:
-			return {prefix + "Can't add profile '" + arg + "' to '~/.config/fssh/config.yaml'.",
+			return {"\033[31m" + prefix + "Can't add profile '" + arg + "' to '~/.config/fssh/config.yaml'.",
 				""};
 		case error::profileEditFail:
-			return {prefix + "Can't edit profile '" + arg + "' in '~/.config/fssh/config.yaml'.",
+			return {"\033[31m" + prefix + "Can't edit profile '" + arg + "' in '~/.config/fssh/config.yaml'.",
 			""};
 		case error::profileDelFail:
-			return {prefix + "Can't delete profile '" + arg + "' in '~/.config/fssh/config.yaml'.",
+			return {"\033[31m" + prefix + "Can't delete profile '" + arg + "' in '~/.config/fssh/config.yaml'.",
 			""};
 		case error::launcherConfigFail:
-			return {prefix + "Can't read launcher config in '~/.config/fssh/launcher.yaml'.",
+			return {"\033[31m" + prefix + "Can't read launcher config in '~/.config/fssh/launcher.yaml'.",
 				prefix + "Loaded using defaults."};
 		default:
-			return {prefix + "Unexpected error. Sorry, I can't help you. You are on your own.",
+			return {"\033[31m" + prefix + "Unexpected error. Sorry, I can't help you. You are on your own.",
 			""};
 	}
 }
@@ -129,10 +131,10 @@ std::vector<std::string> checkHosts(const std::vector<report>& profileList, boos
 		processes[i].wait();
 
 		if (processes[i].exit_code() == 0) {
-			result[i] = "[ONLINE]";
+			result[i] = "\033[92m[ONLINE]";
 		}
 		else {
-			result[i] = "[UNREACHABLE]";
+			result[i] = "\033[91m[UNREACHABLE]";
 		}
 	}
 	return result;
@@ -146,12 +148,14 @@ std::vector<report> readConfig() {
 	
 	try {
 		YAML::Node config = YAML::LoadFile(CONFIG_PATH);
+		YAML::Node launcherConfig = YAML::LoadFile(LAUNCHER_CONFIG_PATH);
 
 		if (config.IsMap()) {
 			for (auto const& rootElement : config) {
 				std::string profileName = rootElement.first.as<std::string>();
 
 				report reportLine;
+				reportLine.color = launcherConfig["profile-colors"][profileName].as<std::string>("white");
 				reportLine.name = profileName;
 				reportLine.ip = config[profileName]["ipAddr"].as<std::string>();
 				reportLine.port = config[profileName]["port"].as<std::string>();

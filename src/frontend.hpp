@@ -9,13 +9,16 @@ std::string editProfile();
 std::string newProfile ();
 std::string deleteProfile();
 
+void colorList();
+
 //LAUNCHER PREFERENCES EDITOR
-std::string editMenu_mainPage(std::string message = "[FSSH MENU] Errors or notifications will appear here.");
-std::string editMenu_logoColor(std::string message = "[FSSH MENU] Errors or notifications will appear here.");
-std::string editMenu_logoStyle(std::string message = "[FSSH MENU] Errors or notifications will appear here.");
+std::string editMenu_mainPage(std::string message = "\033[90m[FSSH MENU] Errors or notifications will appear here.\033[0m");
+std::string editMenu_logoColor(std::string message = "\033[90m[FSSH MENU] Errors or notifications will appear here.\033[0m");
+std::string editMenu_logoStyle(std::string message = "\033[90m[FSSH MENU] Errors or notifications will appear here.\033[0m");
+std::string editMenu_profileColor(std::string message = "\033[90m[FSSH MENU] Errors or notifications will appear here.\033[0m");
 
 
 //MAIN MENU
-void mainMenu(std::string message = "[FSSH MENU] Errors or notifications will appear here.");
+void mainMenu(std::string message = "\033[90m[FSSH MENU] Errors or notifications will appear here.\033[0m");
 
 #endif

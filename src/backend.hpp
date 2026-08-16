@@ -27,6 +27,7 @@ struct operationResult {
 };
 
 struct report {
+	std::string color;
 	std::string name;
 	std::string ip;
 	std::string port;
